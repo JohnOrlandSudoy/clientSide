@@ -1,0 +1,95 @@
+import { Profile } from '../types/profile';
+
+const STORAGE_KEY = 'kontak-clients';
+
+const initialProfiles: Profile[] = [
+  {
+    id: "20251001-0000-0001",
+    pin: "12345",
+    uniqueCode: "gsdbhb7390bcsdhjughu",
+    fullName: "Default Name 1",
+    email: "default1@example.com",
+    jobTitle: "Default Job",
+    companyName: "Default Company",
+    mobilePrimary: "123-456-7890",
+    address: "Default Address 1"
+  },
+  {
+    id: "20251001-0000-0002",
+    pin: "67890",
+    uniqueCode: "cjfidhverkscdkdscmkdsjf",
+    fullName: "John Doe",
+    email: "john@example.com",
+    jobTitle: "Developer",
+    companyName: "Tech Corp",
+    mobilePrimary: "987-654-3210",
+    address: "123 Tech St"
+  },
+  {
+    id: "20251001-0000-0003",
+    pin: "54321",
+    uniqueCode: "xyz789abc123def456",
+    fullName: "Jane Smith",
+    email: "jane@example.com",
+    jobTitle: "Designer",
+    companyName: "Creative Ltd",
+    mobilePrimary: "555-123-4567",
+    address: "456 Art Ave"
+  },
+  {
+    id: "20251001-0000-0004",
+    pin: "11111",
+    uniqueCode: "abc123xyz789ghi456",
+    fullName: "Default Name 4",
+    email: "default4@example.com",
+    jobTitle: "Default Job",
+    companyName: "Default Company",
+    mobilePrimary: "111-222-3333",
+    address: "Default Address 4"
+  },
+  {
+    id: "20251001-0000-0005",
+    pin: "99999",
+    uniqueCode: "def456jkl789mno123",
+    fullName: "Default Name 5",
+    email: "default5@example.com",
+    jobTitle: "Default Job",
+    companyName: "Default Company",
+    mobilePrimary: "444-555-6666",
+    address: "Default Address 5"
+  }
+];
+
+export const initializeStorage = (): void => {
+  const existing = localStorage.getItem(STORAGE_KEY);
+  if (!existing) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(initialProfiles));
+    console.log('Storage initialized with sample profiles');
+  }
+};
+
+export const getProfiles = (): Profile[] => {
+  const data = localStorage.getItem(STORAGE_KEY);
+  return data ? JSON.parse(data) : [];
+};
+
+export const getProfileById = (id: string): Profile | undefined => {
+  const profiles = getProfiles();
+  return profiles.find(p => p.id === id);
+};
+
+export const updateProfile = (updatedProfile: Profile): void => {
+  const profiles = getProfiles();
+  const index = profiles.findIndex(p => p.id === updatedProfile.id);
+
+  if (index !== -1) {
+    profiles[index] = updatedProfile;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(profiles));
+    console.log('Profile updated in localStorage:', updatedProfile);
+  }
+};
+
+export const verifyCredentials = (id: string, pin: string): boolean => {
+  const profile = getProfileById(id);
+  return profile ? profile.pin === pin : false;
+};
