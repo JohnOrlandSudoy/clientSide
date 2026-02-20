@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { User, Briefcase, Building, Phone, Mail, MapPin, Facebook, Instagram, Music, MessageCircle, Globe, Upload } from 'lucide-react';
 import { Profile } from '../types/profile';
-import { updateProfile } from '../utils/storage';
+import { updateProfile as apiUpdateProfile, uploadProfilePhoto, toServerFileUrl } from '../api/api';
 
 interface ProfileUpdateFormProps {
   profile: Profile;
@@ -15,9 +15,51 @@ export const ProfileUpdateForm = ({ profile, onSuccess }: ProfileUpdateFormProps
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = () => {
-    updateProfile(formData);
-    onSuccess('Your profile updated successfully');
+  const handleSave = async () => {
+    try {
+      const payload = {
+        profilePhoto: formData.profilePhoto,
+        fullName: formData.fullName,
+        email: formData.email,
+        jobTitle: formData.jobTitle,
+        companyName: formData.companyName,
+        mobilePrimary: formData.mobilePrimary,
+        landlineNumber: formData.landlineNumber,
+        address: formData.address,
+        facebookLink: formData.facebookLink,
+        instagramLink: formData.instagramLink,
+        tiktokLink: formData.tiktokLink,
+        whatsappNumber: formData.whatsappNumber,
+        websiteLink: formData.websiteLink,
+      } as any;
+      // If you want to allow PIN change from this form too, include it when present
+      if ((formData as any).pin) {
+        const pin = (formData as any).pin as string;
+        if (/^\d{5}$/.test(pin)) {
+          payload.pin = pin;
+        }
+      }
+      await apiUpdateProfile(formData.uniqueCode, payload);
+      onSuccess('Your profile updated successfully');
+    } catch (e: any) {
+      alert(e?.message || 'Failed to update profile');
+    }
+  };
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputEl = e.currentTarget; // capture before any awaits
+    const file = inputEl.files?.[0];
+    if (!file) return;
+    try {
+      const updated = await uploadProfilePhoto(formData.uniqueCode, file);
+      setFormData(prev => ({ ...prev, profilePhoto: updated.profilePhoto }));
+      onSuccess('Photo uploaded successfully');
+    } catch (err: any) {
+      alert(err?.message || 'Failed to upload photo');
+    } finally {
+      // reset input value to allow re-selecting same file if needed
+      if (inputEl) inputEl.value = '';
+    }
   };
 
   return (
@@ -96,24 +138,12 @@ export const ProfileUpdateForm = ({ profile, onSuccess }: ProfileUpdateFormProps
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Mobile Number (Secondary)
-            </label>
-            <input
-              type="text"
-              value={formData.mobileSecondary || ''}
-              onChange={(e) => handleChange('mobileSecondary', e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2563a5] focus:border-transparent transition-all hover:border-gray-400"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
               Landline Number
             </label>
             <input
               type="text"
-              value={formData.landline || ''}
-              onChange={(e) => handleChange('landline', e.target.value)}
+              value={formData.landlineNumber}
+              onChange={(e) => handleChange('landlineNumber', e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2563a5] focus:border-transparent transition-all hover:border-gray-400"
             />
           </div>
@@ -158,7 +188,7 @@ export const ProfileUpdateForm = ({ profile, onSuccess }: ProfileUpdateFormProps
               </label>
               <input
                 type="url"
-                value={formData.facebookLink || ''}
+                value={formData.facebookLink}
                 onChange={(e) => handleChange('facebookLink', e.target.value)}
                 placeholder="https://facebook.com/..."
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2563a5] focus:border-transparent transition-all hover:border-gray-400"
@@ -172,7 +202,7 @@ export const ProfileUpdateForm = ({ profile, onSuccess }: ProfileUpdateFormProps
               </label>
               <input
                 type="url"
-                value={formData.instagramLink || ''}
+                value={formData.instagramLink}
                 onChange={(e) => handleChange('instagramLink', e.target.value)}
                 placeholder="https://instagram.com/..."
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2563a5] focus:border-transparent transition-all hover:border-gray-400"
@@ -186,7 +216,7 @@ export const ProfileUpdateForm = ({ profile, onSuccess }: ProfileUpdateFormProps
               </label>
               <input
                 type="url"
-                value={formData.tiktokLink || ''}
+                value={formData.tiktokLink}
                 onChange={(e) => handleChange('tiktokLink', e.target.value)}
                 placeholder="https://tiktok.com/@..."
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2563a5] focus:border-transparent transition-all hover:border-gray-400"
@@ -200,7 +230,7 @@ export const ProfileUpdateForm = ({ profile, onSuccess }: ProfileUpdateFormProps
               </label>
               <input
                 type="text"
-                value={formData.whatsappNumber || ''}
+                value={formData.whatsappNumber}
                 onChange={(e) => handleChange('whatsappNumber', e.target.value)}
                 placeholder="+1234567890"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2563a5] focus:border-transparent transition-all hover:border-gray-400"
@@ -214,22 +244,9 @@ export const ProfileUpdateForm = ({ profile, onSuccess }: ProfileUpdateFormProps
               </label>
               <input
                 type="url"
-                value={formData.websiteLink || ''}
+                value={formData.websiteLink}
                 onChange={(e) => handleChange('websiteLink', e.target.value)}
                 placeholder="https://..."
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2563a5] focus:border-transparent transition-all hover:border-gray-400"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Others
-              </label>
-              <input
-                type="text"
-                value={formData.others || ''}
-                onChange={(e) => handleChange('others', e.target.value)}
-                placeholder="Additional links"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2563a5] focus:border-transparent transition-all hover:border-gray-400"
               />
             </div>
@@ -244,11 +261,17 @@ export const ProfileUpdateForm = ({ profile, onSuccess }: ProfileUpdateFormProps
           <div className="bg-gradient-to-br from-gray-50 to-blue-50 rounded-xl p-6 border border-gray-200">
             <div className="flex flex-col md:flex-row items-center gap-6">
               <div className="relative group">
-                <img
-                  src="/image.png"
-                  alt="Profile"
-                  className="w-40 h-40 object-cover rounded-2xl border-4 border-white shadow-lg group-hover:shadow-2xl transition-all"
-                />
+                {formData.profilePhoto ? (
+                  <img
+                    src={toServerFileUrl(formData.profilePhoto)}
+                    alt="Profile"
+                    className="w-40 h-40 object-cover rounded-2xl border-4 border-white shadow-lg group-hover:shadow-2xl transition-all"
+                  />
+                ) : (
+                  <div className="w-40 h-40 bg-gray-200 rounded-2xl border-4 border-white shadow-lg flex items-center justify-center">
+                    <span className="text-gray-500 text-sm">No Photo</span>
+                  </div>
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
               </div>
               <div className="flex-1 w-full">
@@ -259,7 +282,7 @@ export const ProfileUpdateForm = ({ profile, onSuccess }: ProfileUpdateFormProps
                   <span className="text-base font-semibold text-[#1a4d6d] mb-1">Upload Photo</span>
                   <span className="text-xs text-gray-500 mb-3">Click or drag and drop</span>
                   <span className="text-xs text-gray-400 bg-gray-100 px-4 py-1 rounded-full">PNG, JPG up to 5MB</span>
-                  <input type="file" className="hidden" accept="image/*" />
+                  <input type="file" className="hidden" accept="image/*" onChange={handleUpload} />
                 </label>
               </div>
             </div>

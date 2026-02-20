@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Lock } from 'lucide-react';
 import { Profile } from '../types/profile';
-import { updateProfile } from '../utils/storage';
+import { updateProfile as apiUpdateProfile } from '../api/api';
 
 interface ChangePinFormProps {
   profile: Profile;
@@ -13,7 +13,7 @@ export const ChangePinForm = ({ profile, onSuccess }: ChangePinFormProps) => {
   const [confirmPin, setConfirmPin] = useState('');
   const [error, setError] = useState('');
 
-  const handleChangePin = () => {
+  const handleChangePin = async () => {
     if (!newPin || !confirmPin) {
       setError('Please fill in both PIN fields');
       return;
@@ -29,8 +29,8 @@ export const ChangePinForm = ({ profile, onSuccess }: ChangePinFormProps) => {
       return;
     }
 
-    const updatedProfile = { ...profile, pin: newPin };
-    updateProfile(updatedProfile);
+    const payload = { pin: newPin };
+    await apiUpdateProfile(profile.uniqueCode, payload);
 
     setNewPin('');
     setConfirmPin('');

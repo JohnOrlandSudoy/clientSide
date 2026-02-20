@@ -1,32 +1,42 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Lock, User } from 'lucide-react';
-import { verifyCredentials } from '../utils/storage';
+import { verifyById } from '../api/api';
 
-interface AuthViewProps {
-  onAuthenticate: (id: string) => void;
-}
-
-export const AuthView = ({ onAuthenticate }: AuthViewProps) => {
+export const AuthView = () => {
+  const navigate = useNavigate();
   const [idNumber, setIdNumber] = useState('');
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleVerify = () => {
-    if (!idNumber || !pin) {
+  const handleVerify = async () => {
+    if (submitting) return;
+    const id = idNumber.trim();
+    const p = pin.trim();
+    if (!id || !p) {
       setError('Please enter both ID Number and PIN');
       return;
     }
 
-    if (pin.length !== 5 || !/^\d+$/.test(pin)) {
+    if (p.length !== 5 || !/^\d+$/.test(p)) {
       setError('PIN must be exactly 5 digits');
       return;
     }
 
-    if (verifyCredentials(idNumber, pin)) {
+    try {
+      setSubmitting(true);
+      const res = await verifyById({ id, pin: p });
       setError('');
-      onAuthenticate(idNumber);
-    } else {
-      setError('Invalid ID Number or PIN. Please try again.');
+      if (!res?.uniqueCode) {
+        setError('Verification succeeded but no unique code returned.');
+        return;
+      }
+      navigate(`/edit/${encodeURIComponent(res.uniqueCode)}`);
+    } catch (e: any) {
+      setError(e?.message || 'Invalid ID Number or PIN. Please try again.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -85,9 +95,10 @@ export const AuthView = ({ onAuthenticate }: AuthViewProps) => {
 
           <button
             onClick={handleVerify}
-            className="w-full bg-gradient-to-r from-[#1a4d6d] to-[#2563a5] text-white py-3.5 rounded-lg hover:from-[#2563a5] hover:to-[#1a4d6d] transition-all font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 hover:scale-[1.02]"
+            className="w-full bg-gradient-to-r from-[#1a4d6d] to-[#2563a5] text-white py-3.5 rounded-lg hover:from-[#2563a5] hover:to-[#1a4d6d] transition-all font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 hover:scale-[1.02] disabled:opacity-60"
+            disabled={submitting}
           >
-            Verify
+            {submitting ? 'Verifying...' : 'Verify'}
           </button>
         </div>
 
@@ -95,6 +106,13 @@ export const AuthView = ({ onAuthenticate }: AuthViewProps) => {
           <p className="font-medium text-gray-700 mb-1">Demo Credentials</p>
           <p>IDs: 20251001-0000-0001 to 20251001-0000-0005</p>
           <p className="mt-1">PINs: 12345, 67890, 54321</p>
+          <div className="mt-3 pt-3 border-t border-gray-200">
+            <p className="font-medium text-gray-700 mb-1">View Public Profiles</p>
+            <p className="text-xs">
+              <a href="/myprofile/gsdbhb7390bcsdhjughu" className="text-blue-600 hover:underline">John Doe</a> | 
+              <a href="/myprofile/cjfidhverkscdkdscmkdsjf" className="text-blue-600 hover:underline ml-1">Jane Smith</a>
+            </p>
+          </div>
         </div>
       </div>
     </div>

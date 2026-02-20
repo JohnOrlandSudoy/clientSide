@@ -12,7 +12,13 @@ const initialProfiles: Profile[] = [
     jobTitle: "Default Job",
     companyName: "Default Company",
     mobilePrimary: "123-456-7890",
-    address: "Default Address 1"
+    landlineNumber: "238490-9083287",
+    address: "Default Address 1",
+    facebookLink: "Update your Facebook Link",
+    instagramLink: "Update your Instagram Link",
+    tiktokLink: "Update your TikTok Link",
+    whatsappNumber: "Update your WhatsApp Number",
+    websiteLink: "Update your web link"
   },
   {
     id: "20251001-0000-0002",
@@ -23,7 +29,13 @@ const initialProfiles: Profile[] = [
     jobTitle: "Developer",
     companyName: "Tech Corp",
     mobilePrimary: "987-654-3210",
-    address: "123 Tech St"
+    landlineNumber: "555-123-4567",
+    address: "123 Tech St",
+    facebookLink: "https://facebook.com/johndoe",
+    instagramLink: "https://instagram.com/johndoe",
+    tiktokLink: "https://tiktok.com/@johndoe",
+    whatsappNumber: "+1234567890",
+    websiteLink: "https://johndoe.com"
   },
   {
     id: "20251001-0000-0003",
@@ -34,7 +46,13 @@ const initialProfiles: Profile[] = [
     jobTitle: "Designer",
     companyName: "Creative Ltd",
     mobilePrimary: "555-123-4567",
-    address: "456 Art Ave"
+    landlineNumber: "555-987-6543",
+    address: "456 Art Ave",
+    facebookLink: "https://facebook.com/janesmith",
+    instagramLink: "https://instagram.com/janesmith",
+    tiktokLink: "https://tiktok.com/@janesmith",
+    whatsappNumber: "+0987654321",
+    websiteLink: "https://janesmith.com"
   },
   {
     id: "20251001-0000-0004",
@@ -45,7 +63,13 @@ const initialProfiles: Profile[] = [
     jobTitle: "Default Job",
     companyName: "Default Company",
     mobilePrimary: "111-222-3333",
-    address: "Default Address 4"
+    landlineNumber: "111-444-5555",
+    address: "Default Address 4",
+    facebookLink: "Update your Facebook Link",
+    instagramLink: "Update your Instagram Link",
+    tiktokLink: "Update your TikTok Link",
+    whatsappNumber: "Update your WhatsApp Number",
+    websiteLink: "Update your web link"
   },
   {
     id: "20251001-0000-0005",
@@ -56,7 +80,13 @@ const initialProfiles: Profile[] = [
     jobTitle: "Default Job",
     companyName: "Default Company",
     mobilePrimary: "444-555-6666",
-    address: "Default Address 5"
+    landlineNumber: "444-777-8888",
+    address: "Default Address 5",
+    facebookLink: "Update your Facebook Link",
+    instagramLink: "Update your Instagram Link",
+    tiktokLink: "Update your TikTok Link",
+    whatsappNumber: "Update your WhatsApp Number",
+    websiteLink: "Update your web link"
   }
 ];
 
