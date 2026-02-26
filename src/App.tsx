@@ -15,15 +15,11 @@ function App() {
   return (
     <Router>
       <div className="min-h-screen bg-gray-100">
-        <Header />
-        
         <Routes>
           <Route path="/" element={<AuthView />} />
           <Route path="/myprofile/:uniqueCode" element={<PublicProfileView />} />
           <Route path="/edit/:uniqueCode" element={<PrivateProfileEdit />} />
         </Routes>
-        
-        <Footer />
       </div>
     </Router>
   );

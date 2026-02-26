@@ -8,6 +8,7 @@ export interface Profile {
   status?: string;
   jobTitle: string;              // "Default Job"
   companyName: string;           // "Default Company"
+  location?: string;             // "Default Location"
   mobilePrimary: string;         // "123-456-7890"
   landlineNumber: string;        // "238490-9083287"
   address: string;               // "Default Address 1"
@@ -15,7 +16,9 @@ export interface Profile {
   instagramLink: string;         // "Update your Instagram Link"
   tiktokLink: string;            // "Update your TikTok Link"
   whatsappNumber: string;        // "Update your WhatsApp Number"
+  viberNumber?: string;          // "Update your Viber Number"
   websiteLink: string;           // "Update your web link"
+  aboutText?: string;            // "About text"
   createdAt?: string;
   updatedAt?: string;
 }

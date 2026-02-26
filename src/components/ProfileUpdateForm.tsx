@@ -23,6 +23,7 @@ export const ProfileUpdateForm = ({ profile, onSuccess }: ProfileUpdateFormProps
         email: formData.email,
         jobTitle: formData.jobTitle,
         companyName: formData.companyName,
+        location: formData.location,
         mobilePrimary: formData.mobilePrimary,
         landlineNumber: formData.landlineNumber,
         address: formData.address,
@@ -31,6 +32,8 @@ export const ProfileUpdateForm = ({ profile, onSuccess }: ProfileUpdateFormProps
         tiktokLink: formData.tiktokLink,
         whatsappNumber: formData.whatsappNumber,
         websiteLink: formData.websiteLink,
+        viberNumber: formData.viberNumber,
+        aboutText: formData.aboutText,
       } as any;
       // If you want to allow PIN change from this form too, include it when present
       if ((formData as any).pin) {
@@ -125,6 +128,20 @@ export const ProfileUpdateForm = ({ profile, onSuccess }: ProfileUpdateFormProps
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+              <MapPin className="w-4 h-4 mr-1" />
+              Location / Branch
+            </label>
+            <input
+              type="text"
+              value={formData.location || ''}
+              onChange={(e) => handleChange('location', e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2563a5] focus:border-transparent transition-all hover:border-gray-400"
+              placeholder="e.g. Katipunan Branch"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
               <Phone className="w-4 h-4 mr-1" />
               Mobile Number (Primary)
             </label>
@@ -170,6 +187,19 @@ export const ProfileUpdateForm = ({ profile, onSuccess }: ProfileUpdateFormProps
               value={formData.address}
               onChange={(e) => handleChange('address', e.target.value)}
               rows={3}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2563a5] focus:border-transparent transition-all hover:border-gray-400"
+            />
+          </div>
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+              <User className="w-4 h-4 mr-1" />
+              About Me
+            </label>
+            <textarea
+              value={formData.aboutText || ''}
+              onChange={(e) => handleChange('aboutText', e.target.value)}
+              rows={4}
+              placeholder="Tell us about yourself..."
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2563a5] focus:border-transparent transition-all hover:border-gray-400"
             />
           </div>
@@ -232,6 +262,20 @@ export const ProfileUpdateForm = ({ profile, onSuccess }: ProfileUpdateFormProps
                 type="text"
                 value={formData.whatsappNumber}
                 onChange={(e) => handleChange('whatsappNumber', e.target.value)}
+                placeholder="+1234567890"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2563a5] focus:border-transparent transition-all hover:border-gray-400"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                <Phone className="w-4 h-4 mr-1" />
+                Viber Number
+              </label>
+              <input
+                type="text"
+                value={formData.viberNumber || ''}
+                onChange={(e) => handleChange('viberNumber', e.target.value)}
                 placeholder="+1234567890"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2563a5] focus:border-transparent transition-all hover:border-gray-400"
               />
