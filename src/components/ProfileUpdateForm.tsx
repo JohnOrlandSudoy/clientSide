@@ -3,9 +3,84 @@ import { User, Instagram, Music, Globe, Upload, Crown, Check, X, Trash2 } from '
 import { Profile } from '../types/profile';
 import { updateProfile as apiUpdateProfile, uploadProfilePhoto, uploadLogo, toServerFileUrl, uploadGalleryImage, getGalleryImages, deleteGalleryImage, GalleryImage } from '../api/api';
 
+const countryCodes = [
+    { code: '+63', country: 'PH' },
+    { code: '+1', country: 'US/CA' },
+    { code: '+44', country: 'UK' },
+    { code: '+61', country: 'AU' },
+    { code: '+65', country: 'SG' },
+    { code: '+81', country: 'JP' },
+    { code: '+971', country: 'UAE' },
+    { code: '+966', country: 'SA' },
+    { code: '+974', country: 'QA' },
+    { code: '+852', country: 'HK' },
+    { code: '+86', country: 'CN' },
+    { code: '+82', country: 'KR' },
+    { code: '+886', country: 'TW' },
+    { code: '+66', country: 'TH' },
+    { code: '+60', country: 'MY' },
+    { code: '+62', country: 'ID' },
+    { code: '+84', country: 'VN' },
+    { code: '+91', country: 'IN' },
+    { code: '+39', country: 'IT' },
+    { code: '+33', country: 'FR' },
+    { code: '+49', country: 'DE' },
+    { code: '+34', country: 'ES' },
+].sort((a, b) => a.country.localeCompare(b.country));
+
+const PhoneInput = ({ value, onChange, label, subLabel }: { value: string, onChange: (val: string) => void, label: string, subLabel?: string }) => {
+    // Sort by length desc to ensure +123 matches before +1
+    const sortedCodes = [...countryCodes].sort((a, b) => b.code.length - a.code.length);
+    const selectedCodeObj = sortedCodes.find(c => value?.startsWith(c.code)) || countryCodes.find(c => c.code === '+63');
+    const selectedCode = selectedCodeObj?.code || '+63';
+    
+    // If value starts with selected code, strip it. Otherwise use value as is (assuming it's just the number part or legacy format)
+    const numberPart = value?.startsWith(selectedCode) 
+        ? value.slice(selectedCode.length) 
+        : (value?.replace(/^\+/, '') || ''); // Strip leading + if it doesn't match any known code, just in case
+
+    return (
+        <div>
+            <label className="block text-white font-semibold mb-2 ml-1">
+                {label} {subLabel && <span className="text-gray-400 text-xs font-normal">{subLabel}</span>}
+            </label>
+            <div className="flex">
+                <div className="relative">
+                    <select
+                        value={selectedCode}
+                        onChange={(e) => onChange(`${e.target.value}${numberPart}`)}
+                        className="bg-black border border-white rounded-l-full pl-3 pr-8 py-3 text-white focus:outline-none focus:ring-2 focus:ring-white/50 transition-all appearance-none h-full cursor-pointer"
+                        style={{ borderRight: 'none', minWidth: '80px' }}
+                    >
+                        {countryCodes.map(c => (
+                            <option key={c.code} value={c.code}>{c.code} {c.country}</option>
+                        ))}
+                    </select>
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
+                        <svg className="w-4 h-4 text-white fill-current" viewBox="0 0 20 20">
+                            <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                        </svg>
+                    </div>
+                </div>
+                <input
+                    type="tel"
+                    value={numberPart}
+                    onChange={(e) => {
+                        const newNum = e.target.value.replace(/[^0-9]/g, '');
+                        onChange(`${selectedCode}${newNum}`);
+                    }}
+                    className="flex-1 bg-black border border-white rounded-r-full px-6 py-3 text-white focus:outline-none focus:ring-2 focus:ring-white/50 transition-all"
+                    style={{ borderLeft: '1px solid #333' }}
+                    placeholder="9123456789"
+                />
+            </div>
+        </div>
+    );
+};
+
 interface ProfileUpdateFormProps {
   profile: Profile;
-  onSuccess: (message: string) => void;
+  onSuccess: (message: string, shouldRefresh?: boolean) => void;
   onExit?: () => void;
 }
 
@@ -38,7 +113,7 @@ export const ProfileUpdateForm = ({ profile, onSuccess, onExit }: ProfileUpdateF
     try {
       await uploadGalleryImage(formData.uniqueCode, file);
       await loadGallery(formData.uniqueCode);
-      onSuccess('Flyer uploaded successfully');
+      onSuccess('Flyer uploaded successfully', false);
     } catch (e) {
       console.error('Error uploading flyer:', e);
       alert('Failed to upload flyer');
@@ -236,7 +311,7 @@ export const ProfileUpdateForm = ({ profile, onSuccess, onExit }: ProfileUpdateF
              />
         </div>
 
-        <div className="relative z-10 w-full max-w-md mx-auto px-6 py-8 flex flex-col h-full">
+        <div className="relative z-10 w-full max-w-md mx-auto px-6 pt-8 pb-20 flex flex-col h-full">
             <div className="mb-8">
                 <h2 className="text-4xl font-bold text-white mb-2">Contact</h2>
                 <h2 className="text-4xl font-bold text-white">Details</h2>
@@ -249,19 +324,16 @@ export const ProfileUpdateForm = ({ profile, onSuccess, onExit }: ProfileUpdateF
                 </div>
             </div>
 
-            <div className="flex-1 space-y-5 overflow-y-auto pb-20 custom-scrollbar">
+            <div className="flex-1 space-y-5 overflow-y-auto pb-10 custom-scrollbar">
                 <h3 className="text-white/80 italic text-sm mb-4">Profile Information</h3>
 
                 <div className="space-y-4">
-                    <div>
-                        <label className="block text-white font-semibold mb-2 ml-1">Company Mobile No. <span className="text-gray-400 text-xs font-normal">(Primary No.)</span></label>
-                        <input
-                            type="text"
-                            value={formData.mobilePrimary}
-                            onChange={(e) => handleChange('mobilePrimary', e.target.value)}
-                            className="w-full bg-black border border-white rounded-full px-6 py-3 text-white focus:outline-none focus:ring-2 focus:ring-white/50 transition-all"
-                        />
-                    </div>
+                    <PhoneInput
+                        label="Company Mobile No."
+                        subLabel="(Primary No.)"
+                        value={formData.mobilePrimary || ''}
+                        onChange={(val) => handleChange('mobilePrimary', val)}
+                    />
 
                     <div>
                         <label className="block text-white font-semibold mb-2 ml-1">Company landline</label>
@@ -283,29 +355,21 @@ export const ProfileUpdateForm = ({ profile, onSuccess, onExit }: ProfileUpdateF
                         />
                     </div>
 
-                    <div>
-                        <label className="block text-white font-semibold mb-2 ml-1">Viber No.</label>
-                        <input
-                            type="text"
-                            value={formData.viberNumber || ''}
-                            onChange={(e) => handleChange('viberNumber', e.target.value)}
-                            className="w-full bg-black border border-white rounded-full px-6 py-3 text-white focus:outline-none focus:ring-2 focus:ring-white/50 transition-all"
-                        />
-                    </div>
+                    <PhoneInput
+                        label="Viber No."
+                        value={formData.viberNumber || ''}
+                        onChange={(val) => handleChange('viberNumber', val)}
+                    />
 
-                    <div>
-                        <label className="block text-white font-semibold mb-2 ml-1">Whatsapps No.</label>
-                        <input
-                            type="text"
-                            value={formData.whatsappNumber}
-                            onChange={(e) => handleChange('whatsappNumber', e.target.value)}
-                            className="w-full bg-black border border-white rounded-full px-6 py-3 text-white focus:outline-none focus:ring-2 focus:ring-white/50 transition-all"
-                        />
-                    </div>
+                    <PhoneInput
+                        label="Whatsapps No."
+                        value={formData.whatsappNumber || ''}
+                        onChange={(val) => handleChange('whatsappNumber', val)}
+                    />
                 </div>
             </div>
 
-            <div className="mt-6 flex gap-4">
+            <div className="mt-1 flex gap-4">
                 <button
                     onClick={handleBack}
                     className="flex-1 bg-gray-800 text-white py-3 rounded-full font-semibold hover:bg-gray-700 transition-all"
@@ -371,7 +435,7 @@ export const ProfileUpdateForm = ({ profile, onSuccess, onExit }: ProfileUpdateF
                 </div>
             </div>
 
-            <div className="flex-1 space-y-5 overflow-y-auto pb-20 custom-scrollbar">
+            <div className="flex-1 space-y-5 overflow-y-auto pb-10 custom-scrollbar">
                 <h3 className="text-white/80 italic text-sm mb-4">Profile Information</h3>
 
                 <div className="space-y-4">
@@ -414,7 +478,7 @@ export const ProfileUpdateForm = ({ profile, onSuccess, onExit }: ProfileUpdateF
                 </div>
             </div>
 
-            <div className="mt-6 flex gap-4">
+            <div className="mt-3 flex gap-4">
                 <button
                     onClick={handleBack}
                     className="flex-1 bg-gray-800 text-white py-3 rounded-full font-semibold hover:bg-gray-700 transition-all"
@@ -473,7 +537,7 @@ export const ProfileUpdateForm = ({ profile, onSuccess, onExit }: ProfileUpdateF
                 <h2 className="text-5xl font-black text-white leading-none tracking-tight">Links</h2>
             </div>
 
-            <div className="flex-1 space-y-5 overflow-y-auto pb-20 custom-scrollbar">
+            <div className="flex-1 space-y-5 overflow-y-auto pb-8 custom-scrollbar">
                 <div className="space-y-4">
                     <div>
                         <label className="block text-white font-semibold mb-2 ml-1">Facebook Business Page Link</label>
@@ -560,7 +624,7 @@ export const ProfileUpdateForm = ({ profile, onSuccess, onExit }: ProfileUpdateF
                                                 setUploadedPhotoUrl(toServerFileUrl(updated.profilePhoto));
                                                 setShowPhotoPopup(true);
                                                 setTimeout(() => setShowPhotoPopup(false), 3000); // Hide after 3s
-                                                onSuccess('Photo uploaded');
+                                                onSuccess('Photo uploaded', false);
                                             } catch (err: unknown) {
                                                 alert(err instanceof Error ? err.message : 'Failed to upload photo');
                                             }
@@ -580,7 +644,7 @@ export const ProfileUpdateForm = ({ profile, onSuccess, onExit }: ProfileUpdateF
                                             try {
                                                 const updated = await uploadLogo(formData.uniqueCode, file);
                                                 setFormData(prev => ({ ...prev, logo: updated.logo }));
-                                                onSuccess('Logo uploaded');
+                                                onSuccess('Logo uploaded', false);
                                             } catch (err: unknown) {
                                                 alert(err instanceof Error ? err.message : 'Failed to upload logo');
                                             }
@@ -675,7 +739,7 @@ export const ProfileUpdateForm = ({ profile, onSuccess, onExit }: ProfileUpdateF
                 </div>
             </div>
 
-            <div className="mt-6 flex gap-4 pb-8">
+            <div className="mt-3 flex gap-4 pb-8">
                  <button
                     onClick={handleBack}
                     className="flex-1 bg-gray-800 text-white py-4 rounded-xl font-bold hover:bg-gray-700 transition-all text-lg"

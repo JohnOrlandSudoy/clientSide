@@ -19,6 +19,13 @@ export const PrivateProfileEdit = () => {
   const [pin, setPin] = useState('');
 
   useEffect(() => {
+    // Check for existing session
+    const sessionAuth = sessionStorage.getItem(`auth_${uniqueCode}`);
+    if (sessionAuth === 'true') {
+      setIsAuthenticated(true);
+      setShowAuth(false);
+    }
+    
     if (uniqueCode) {
       fetchProfile(uniqueCode);
     }
@@ -55,16 +62,20 @@ export const PrivateProfileEdit = () => {
       setAuthError('');
       setIsAuthenticated(true);
       setShowAuth(false);
+      // Save session
+      if (uniqueCode) {
+        sessionStorage.setItem(`auth_${uniqueCode}`, 'true');
+      }
     } catch (e: unknown) {
       setAuthError(e instanceof Error ? e.message : 'Invalid ID Number or PIN. Please try again.');
     }
   };
 
-  const handleSuccess = (message: string) => {
+  const handleSuccess = (message: string, shouldRefresh = true) => {
     setModalMessage(message);
     setModalOpen(true);
-    // Refresh profile data
-    if (uniqueCode) {
+    // Refresh profile data only if requested
+    if (shouldRefresh && uniqueCode) {
       fetchProfile(uniqueCode);
     }
   };

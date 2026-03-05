@@ -4,7 +4,7 @@ import { Profile } from '../types/profile';
 import { 
   User, Mail, Phone, Facebook, Instagram, Music, 
   Globe, Download, QrCode, Home, Smartphone, ChevronRight,
-  Images, Scan, X
+  Images, Scan, X, MessageCircle
 } from 'lucide-react';
 import { getPublicProfile as apiGetPublicProfile, toServerFileUrl, getGalleryImages, GalleryImage } from '../api/api';
 
@@ -384,6 +384,24 @@ export const PublicProfileView = () => {
                       <Instagram className="w-6 h-6 text-white" />
                     </div>
                     <span className="font-bold text-gray-800 text-lg">Instagram</span>
+                  </div>
+                  <ChevronRight className="w-6 h-6 text-gray-400" />
+                </a>
+              )}
+
+              {/* WhatsApp */}
+              {!isDefaultValue(profile.whatsappNumber, 'Update your Whatsapps No.') && (
+                <a 
+                  href={`https://wa.me/${profile.whatsappNumber?.replace(/[^0-9]/g, '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-between bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <div className="flex items-center space-x-4">
+                    <div className="w-10 h-10 rounded-full bg-[#25D366] flex items-center justify-center">
+                      <MessageCircle className="w-5 h-5 text-white fill-current" />
+                    </div>
+                    <span className="font-bold text-gray-800 text-lg">WhatsApp</span>
                   </div>
                   <ChevronRight className="w-6 h-6 text-gray-400" />
                 </a>
