@@ -40,24 +40,24 @@ const PhoneInput = ({ value, onChange, label, subLabel }: { value: string, onCha
         : (value?.replace(/^\+/, '') || ''); // Strip leading + if it doesn't match any known code, just in case
 
     return (
-        <div>
-            <label className="block text-white font-semibold mb-2 ml-1">
+        <div className="w-full">
+            <label className="block text-white font-semibold mb-2 ml-1 text-sm sm:text-base">
                 {label} {subLabel && <span className="text-gray-400 text-xs font-normal">{subLabel}</span>}
             </label>
-            <div className="flex">
-                <div className="relative">
+            <div className="flex w-full">
+                <div className="relative shrink-0">
                     <select
                         value={selectedCode}
                         onChange={(e) => onChange(`${e.target.value}${numberPart}`)}
-                        className="bg-black border border-white rounded-l-full pl-3 pr-8 py-3 text-white focus:outline-none focus:ring-2 focus:ring-white/50 transition-all appearance-none h-full cursor-pointer"
-                        style={{ borderRight: 'none', minWidth: '80px' }}
+                        className="bg-black border border-white rounded-l-full pl-3 pr-7 py-3 text-white text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-white/50 transition-all appearance-none h-full cursor-pointer"
+                        style={{ borderRight: 'none', minWidth: '75px' }}
                     >
                         {countryCodes.map(c => (
                             <option key={c.code} value={c.code}>{c.code} {c.country}</option>
                         ))}
                     </select>
                     <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
-                        <svg className="w-4 h-4 text-white fill-current" viewBox="0 0 20 20">
+                        <svg className="w-3 h-3 text-white fill-current" viewBox="0 0 20 20">
                             <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
                         </svg>
                     </div>
@@ -69,7 +69,7 @@ const PhoneInput = ({ value, onChange, label, subLabel }: { value: string, onCha
                         const newNum = e.target.value.replace(/[^0-9]/g, '');
                         onChange(`${selectedCode}${newNum}`);
                     }}
-                    className="flex-1 bg-black border border-white rounded-r-full px-6 py-3 text-white focus:outline-none focus:ring-2 focus:ring-white/50 transition-all"
+                    className="flex-1 bg-black border border-white rounded-r-full px-4 py-3 text-white text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-white/50 transition-all w-full min-w-0"
                     style={{ borderLeft: '1px solid #333' }}
                     placeholder="9123456789"
                 />
@@ -336,22 +336,22 @@ export const ProfileUpdateForm = ({ profile, onSuccess, onExit }: ProfileUpdateF
                     />
 
                     <div>
-                        <label className="block text-white font-semibold mb-2 ml-1">Company landline</label>
+                        <label className="block text-white font-semibold mb-2 ml-1 text-sm sm:text-base">Company landline</label>
                         <input
                             type="text"
                             value={formData.landlineNumber}
                             onChange={(e) => handleChange('landlineNumber', e.target.value)}
-                            className="w-full bg-black border border-white rounded-full px-6 py-3 text-white focus:outline-none focus:ring-2 focus:ring-white/50 transition-all"
+                            className="w-full bg-black border border-white rounded-full px-4 py-3 text-white text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-white/50 transition-all"
                         />
                     </div>
 
                     <div>
-                        <label className="block text-white font-semibold mb-2 ml-1">Company Email add.</label>
+                        <label className="block text-white font-semibold mb-2 ml-1 text-sm sm:text-base">Company Email add.</label>
                         <input
                             type="email"
                             value={formData.email}
                             onChange={(e) => handleChange('email', e.target.value)}
-                            className="w-full bg-black border border-white rounded-full px-6 py-3 text-white focus:outline-none focus:ring-2 focus:ring-white/50 transition-all"
+                            className="w-full bg-black border border-white rounded-full px-4 py-3 text-white text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-white/50 transition-all"
                         />
                     </div>
 
