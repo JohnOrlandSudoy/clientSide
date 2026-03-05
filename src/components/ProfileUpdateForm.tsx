@@ -531,10 +531,10 @@ export const ProfileUpdateForm = ({ profile, onSuccess, onExit }: ProfileUpdateF
              </div>
         </div>
 
-        <div className="relative z-10 w-full max-w-md mx-auto px-6 py-8 flex flex-col h-full">
-            <div className="mb-8 mt-4">
-                <h2 className="text-5xl font-black text-white leading-none tracking-tight">Social Media</h2>
-                <h2 className="text-5xl font-black text-white leading-none tracking-tight">Links</h2>
+        <div className="relative z-10 w-full max-w-md mx-auto px-6 py-8 flex flex-col h-full gap-2">
+            <div className="mb-8 mt-4 space-y-2">
+                <h2 className="text-3xl font-black text-white leading-none tracking-tight">Social</h2>
+                <h2 className="text-3xl font-black text-white leading-none tracking-tight">Media Links</h2>
             </div>
 
             <div className="flex-1 space-y-5 overflow-y-auto pb-8 custom-scrollbar">

@@ -471,7 +471,7 @@ export const PublicProfileView = () => {
           >
             {/* Modal Header */}
             <div className="bg-[#000000] px-6 py-14 flex justify-center items-center relative">
-              <img src="/tapboos.png" alt="tapboss" className="h-48 object-contain mt-4" />
+              <img src="/tapbos.png" alt="tapboss" className="h-48 object-contain mt-4" />
             </div>
 
             {/* Modal Body */}
