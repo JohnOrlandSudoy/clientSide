@@ -439,19 +439,21 @@ export const PublicProfileView = () => {
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-in fade-in duration-200"
           onClick={() => setShowQR(false)}
         >
+          {/* Always-visible close for mobile */}
+          <button
+            aria-label="Close"
+            onClick={() => setShowQR(false)}
+            className="absolute top-3 right-3 p-3 rounded-full bg-white/15 text-white hover:bg-white/25 transition-colors backdrop-blur-md ring-1 ring-white/30 z-[60]"
+          >
+            <X className="w-7 h-7" />
+          </button>
           <div 
-            className="w-full max-w-sm bg-[#D9D9D9] rounded-[2rem] overflow-hidden shadow-2xl transform transition-all animate-in zoom-in-95 duration-200"
+            className="w-full max-w-sm max-h-[90vh] overflow-y-auto bg-[#D9D9D9] rounded-[2rem] shadow-2xl transform transition-all animate-in zoom-in-95 duration-200"
             onClick={e => e.stopPropagation()}
           >
             {/* Modal Header */}
             <div className="bg-[#000000] px-6 py-14 flex justify-center items-center relative">
               <img src="/tapboos.png" alt="tapboss" className="h-48 object-contain mt-4" />
-              <button 
-                onClick={() => setShowQR(false)}
-                className="absolute right-4 top-4 text-white/60 hover:text-white transition-colors p-2"
-              >
-                <X className="w-6 h-6" />
-              </button>
             </div>
 
             {/* Modal Body */}
@@ -561,12 +563,44 @@ export const PublicProfileView = () => {
           className="fixed inset-0 z-[60] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-300"
           onClick={() => setLightboxImage(null)}
         >
-          <button 
-            className="absolute top-4 right-4 p-2 text-white/60 hover:text-white bg-black/20 hover:bg-black/40 rounded-full transition-all z-20"
-            onClick={() => setLightboxImage(null)}
-          >
-            <X className="w-8 h-8" />
-          </button>
+          <div className="absolute top-4 right-4 flex items-center space-x-3 z-20">
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                if (lightboxImage) {
+                  fetch(lightboxImage)
+                    .then(response => response.blob())
+                    .then(blob => {
+                      const url = window.URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.style.display = 'none';
+                      a.href = url;
+                      const filename = lightboxImage.split('/').pop() || 'gallery-image.jpg';
+                      a.download = filename;
+                      document.body.appendChild(a);
+                      a.click();
+                      window.URL.revokeObjectURL(url);
+                      document.body.removeChild(a);
+                    })
+                    .catch(err => {
+                      console.error('Download failed, opening in new tab', err);
+                      window.open(lightboxImage, '_blank');
+                    });
+                }
+              }}
+              className="p-3 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-all backdrop-blur-md group"
+              title="Download Image"
+            >
+              <Download className="w-6 h-6 group-hover:scale-110 transition-transform" />
+            </button>
+            <button 
+              className="p-3 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-all backdrop-blur-md group"
+              onClick={() => setLightboxImage(null)}
+              title="Close"
+            >
+              <X className="w-6 h-6 group-hover:scale-110 transition-transform" />
+            </button>
+          </div>
           
           <div 
             className="relative max-w-4xl max-h-[90vh] w-full flex items-center justify-center"

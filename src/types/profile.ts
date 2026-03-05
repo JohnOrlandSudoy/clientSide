@@ -17,6 +17,7 @@ export interface Profile {
   tiktokLink: string;            // "Update your TikTok Link"
   whatsappNumber: string;        // "Update your WhatsApp Number"
   viberNumber?: string;          // "Update your Viber Number"
+  googleMapLink?: string;        // "Google Maps link"
   websiteLink: string;           // "Update your web link"
   aboutText?: string;            // "About text"
   themeColor?: string;           // "Hex color code"

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { User, Instagram, Music, Globe, Upload, Crown, Check, X, Trash2 } from 'lucide-react';
 import { Profile } from '../types/profile';
 import { updateProfile as apiUpdateProfile, uploadProfilePhoto, uploadLogo, toServerFileUrl, uploadGalleryImage, getGalleryImages, deleteGalleryImage, GalleryImage } from '../api/api';
@@ -17,28 +17,30 @@ export const ProfileUpdateForm = ({ profile, onSuccess, onExit }: ProfileUpdateF
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
 
-  useEffect(() => {
-    setFormData(profile);
-    if (profile.uniqueCode) {
-      loadGallery();
-    }
-  }, [profile]);
-
-  const loadGallery = async () => {
+  const loadGallery = useCallback(async (uniqueCode: string) => {
+    if (!uniqueCode) return;
     try {
-      const images = await getGalleryImages(profile.uniqueCode);
+      const images = await getGalleryImages(uniqueCode);
       setGalleryImages(images);
     } catch (error) {
       console.error('Error loading gallery:', error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    setFormData(profile);
+    if (profile.uniqueCode) {
+      loadGallery(profile.uniqueCode);
+    }
+  }, [profile, loadGallery]);
 
   const handleGalleryUpload = async (file: File) => {
     try {
       await uploadGalleryImage(formData.uniqueCode, file);
-      await loadGallery();
+      await loadGallery(formData.uniqueCode);
       onSuccess('Flyer uploaded successfully');
-    } catch (error) {
+    } catch (e) {
+      console.error('Error uploading flyer:', e);
       alert('Failed to upload flyer');
     }
   };
@@ -47,8 +49,9 @@ export const ProfileUpdateForm = ({ profile, onSuccess, onExit }: ProfileUpdateF
     if (!confirm('Are you sure you want to delete this flyer?')) return;
     try {
       await deleteGalleryImage(formData.uniqueCode, id);
-      await loadGallery();
-    } catch (error) {
+      await loadGallery(formData.uniqueCode);
+    } catch (e) {
+      console.error('Error deleting flyer:', e);
       alert('Failed to delete flyer');
     }
   };
@@ -97,7 +100,6 @@ export const ProfileUpdateForm = ({ profile, onSuccess, onExit }: ProfileUpdateF
         location: formData.location,
         mobilePrimary: formData.mobilePrimary,
         landlineNumber: formData.landlineNumber,
-        address: formData.address,
         facebookLink: formData.facebookLink,
         instagramLink: formData.instagramLink,
         tiktokLink: formData.tiktokLink,
@@ -406,24 +408,6 @@ export const ProfileUpdateForm = ({ profile, onSuccess, onExit }: ProfileUpdateF
                             type="text"
                             value={formData.location || ''}
                             onChange={(e) => handleChange('location', e.target.value)}
-                            className="w-full bg-black border border-white rounded-full px-6 py-3 text-white focus:outline-none focus:ring-2 focus:ring-white/50 transition-all"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-white font-semibold mb-2 ml-1">Company Complete address</label>
-                        <input
-                            type="text"
-                            value={formData.address}
-                            onChange={(e) => handleChange('address', e.target.value)}
-                            className="w-full bg-black border border-white rounded-full px-6 py-3 text-white focus:outline-none focus:ring-2 focus:ring-white/50 transition-all"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-white font-semibold mb-2 ml-1">Company Google Map</label>
-                        <input
-                            type="text"
-                            value={formData.websiteLink}
-                            onChange={(e) => handleChange('websiteLink', e.target.value)}
                             className="w-full bg-black border border-white rounded-full px-6 py-3 text-white focus:outline-none focus:ring-2 focus:ring-white/50 transition-all"
                         />
                     </div>
