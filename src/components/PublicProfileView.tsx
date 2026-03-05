@@ -3,10 +3,10 @@ import { useParams, Link } from 'react-router-dom';
 import { Profile } from '../types/profile';
 import { 
   User, Mail, Phone, Facebook, Instagram, Music, 
-  Globe, Share2, Download, QrCode, Home, Smartphone, ChevronRight,
-  Briefcase, Building2, MapPin, Images, Scan, X
+  Globe, Download, QrCode, Home, Smartphone, ChevronRight,
+  Images, Scan, X
 } from 'lucide-react';
-import { getPublicProfile as apiGetPublicProfile, toServerFileUrl } from '../api/api';
+import { getPublicProfile as apiGetPublicProfile, toServerFileUrl, getGalleryImages, GalleryImage } from '../api/api';
 
 export const PublicProfileView = () => {
   const { uniqueCode } = useParams<{ uniqueCode: string }>();
@@ -14,12 +14,25 @@ export const PublicProfileView = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showQR, setShowQR] = useState(false);
+  const [showGallery, setShowGallery] = useState(false);
+  const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
 
   useEffect(() => {
     if (uniqueCode) {
       fetchProfile(uniqueCode);
+      fetchGallery(uniqueCode);
     }
   }, [uniqueCode]);
+
+  const fetchGallery = async (code: string) => {
+    try {
+      const images = await getGalleryImages(code);
+      setGalleryImages(images);
+    } catch (error) {
+      console.error('Error loading gallery:', error);
+    }
+  };
 
   const fetchProfile = async (code: string) => {
     try {
@@ -75,21 +88,113 @@ export const PublicProfileView = () => {
 
   const isBanned = profile.status === 'banned';
 
+  const handleSaveContact = async () => {
+    if (!profile) return;
+
+    // Helper to get image as base64
+    const getBase64Image = async (url: string) => {
+        try {
+            const response = await fetch(url);
+            const blob = await response.blob();
+            return new Promise<string>((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result as string);
+                reader.readAsDataURL(blob);
+            });
+        } catch (e) {
+            console.error('Error fetching image:', e);
+            return null;
+        }
+    };
+
+    let photoString = '';
+    if (profile.profilePhoto) {
+        const photoUrl = toServerFileUrl(profile.profilePhoto);
+        const base64 = await getBase64Image(photoUrl);
+        if (base64) {
+            // Remove data:image/jpeg;base64, prefix
+            const b64Data = base64.split(',')[1];
+            photoString = `PHOTO;ENCODING=b;TYPE=JPEG:${b64Data}\n`;
+        }
+    }
+
+    // Construct VCard 3.0 content
+    const vCardData = [
+        'BEGIN:VCARD',
+        'VERSION:3.0',
+        `FN:${profile.fullName}`,
+        `N:${profile.fullName.split(' ').reverse().join(';')};;;`,
+        profile.companyName ? `ORG:${profile.companyName}` : '',
+        profile.jobTitle ? `TITLE:${profile.jobTitle}` : '',
+        profile.mobilePrimary ? `TEL;TYPE=CELL:${profile.mobilePrimary}` : '',
+        profile.landlineNumber ? `TEL;TYPE=WORK:${profile.landlineNumber}` : '',
+        profile.whatsappNumber && !profile.whatsappNumber.includes('Update') ? `TEL;TYPE=WHATSAPP:${profile.whatsappNumber}` : '',
+        profile.viberNumber && !profile.viberNumber.includes('Update') ? `TEL;TYPE=VIBER:${profile.viberNumber}` : '',
+        profile.email ? `EMAIL;TYPE=WORK:${profile.email}` : '',
+        profile.websiteLink && !profile.websiteLink.includes('Update') ? `URL:${profile.websiteLink}` : '',
+        profile.facebookLink && !profile.facebookLink.includes('Update') ? `X-SOCIALPROFILE;TYPE=facebook:${profile.facebookLink}` : '',
+        profile.instagramLink && !profile.instagramLink.includes('Update') ? `X-SOCIALPROFILE;TYPE=instagram:${profile.instagramLink}` : '',
+        profile.tiktokLink && !profile.tiktokLink.includes('Update') ? `X-SOCIALPROFILE;TYPE=tiktok:${profile.tiktokLink}` : '',
+        profile.address ? `ADR;TYPE=WORK:;;${profile.address.replace(/,/g, ';')};;;;` : '',
+        profile.aboutText ? `NOTE:${profile.aboutText}` : '',
+        photoString, // Add photo if available
+        `URL;TYPE=PROFILE:${window.location.href}`,
+        'END:VCARD'
+    ].filter(Boolean).join('\n');
+
+    // Create file for sharing/downloading
+    const file = new File([vCardData], `${profile.fullName.replace(/\s+/g, '_')}.vcf`, { type: 'text/vcard' });
+
+    // Try Web Share API first (Mobile Native Experience)
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({
+          files: [file],
+          title: `${profile.fullName} Contact`,
+          text: 'Save to contacts',
+        });
+        return; // Successfully shared
+      } catch (err) {
+        if ((err as Error).name !== 'AbortError') {
+          console.error('Share failed:', err);
+        }
+        // If share fails (or user cancels), fall back to download
+      }
+    }
+
+    // Fallback: Direct Download (Desktop / Non-supported Mobile)
+    const url = window.URL.createObjectURL(file);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `${profile.fullName.replace(/\s+/g, '_')}.vcf`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 flex justify-center font-sans">
       {/* Mobile Container - Max Width 400px */}
       <div className="w-full max-w-[400px] bg-[#D9D9D9] min-h-screen shadow-2xl relative flex flex-col">
         
         {/* Header Section */}
-        <div className="bg-[#333333] pt-8 pb-44 px-3 rounded-b-[0rem] relative z-0">
+        <div 
+          className="pt-8 pb-44 px-3 rounded-b-[0rem] relative z-0"
+          style={{ background: profile.themeColor || '#333333' }}
+        >
           <h1 className="text-white text-2xl font-rounded font-bold mb-2 tracking-wide ml-3">tapboss</h1>
         </div>
         
         {/* Profile Card */}
-          <div className="relative z-10 -mt-44 px-3 mb-2">
-            <div className="bg-[#262626] rounded-[1rem] shadow-xl overflow-hidden flex flex-row min-h-[220px]">
+          <div className="relative z-10 -mt-44 px-3 mb-1">
+            <div 
+              className="rounded-[1rem] shadow-xl overflow-hidden flex flex-row min-h-[220px] relative"
+              style={{ background: profile.themeColor || '#262626' }}
+            >
+              {profile.themeColor && <div className="absolute inset-0 bg-black/20 pointer-events-none z-0" />}
               {/* Left Side - Profile Image (40%) */}
-              <div className="w-[40%] relative">
+              <div className="w-[40%] relative z-10">
               {profile.profilePhoto ? (
                 <img 
                   src={toServerFileUrl(profile.profilePhoto)} 
@@ -104,7 +209,7 @@ export const PublicProfileView = () => {
             </div>
             
             {/* Info Section (60%) */}
-              <div className="w-[60%] p-4 flex flex-col relative">
+              <div className="w-[60%] p-4 flex flex-col relative z-10">
                 {/* QR Code Icon Top Right */}
                 <div className="absolute top-4 right-4">
                   <div 
@@ -151,7 +256,7 @@ export const PublicProfileView = () => {
           )}
 
           {/* About Section */}
-          <div className="mb-3">
+          <div className="mb-1">
             <h3 className="text-gray-900 font-semibold text-lg mb-1">About</h3>
             <p className="text-gray-600 text-sm font-light leading-relaxed">
               {profile.aboutText || "No about information provided yet."}
@@ -159,40 +264,67 @@ export const PublicProfileView = () => {
           </div>
 
           {/* Contact Icons Row */}
-          <div className="flex justify-between items-center mb-3 gap-2">
+          <div className="flex justify-between items-center mb-1 gap-2">
             <a href={`tel:${profile.mobilePrimary}`} className="flex flex-col items-center group">
-              <div className="w-14 h-14 bg-[#333333] rounded-full flex items-center justify-center mb-1 group-hover:bg-[#444] transition-colors shadow-md">
+              <div 
+                className="w-14 h-14 rounded-full flex items-center justify-center mb-1 transition-all shadow-md hover:brightness-110"
+                style={{ background: profile.themeColor || '#333333' }}
+              >
                 <Smartphone className="w-6 h-6 text-white" />
               </div>
             </a>
             
             <a href={`tel:${profile.landlineNumber}`} className="flex flex-col items-center group">
-              <div className="w-14 h-14 bg-[#333333] rounded-full flex items-center justify-center mb-1 group-hover:bg-[#444] transition-colors shadow-md">
+              <div 
+                className="w-14 h-14 rounded-full flex items-center justify-center mb-1 transition-all shadow-md hover:brightness-110"
+                style={{ background: profile.themeColor || '#333333' }}
+              >
                 <Phone className="w-6 h-6 text-white" />
               </div>
             </a>
             
             <a href={`mailto:${profile.email}`} className="flex flex-col items-center group">
-              <div className="w-14 h-14 bg-[#333333] rounded-full flex items-center justify-center mb-1 group-hover:bg-[#444] transition-colors shadow-md">
+              <div 
+                className="w-14 h-14 rounded-full flex items-center justify-center mb-1 transition-all shadow-md hover:brightness-110"
+                style={{ background: profile.themeColor || '#333333' }}
+              >
                 <Mail className="w-6 h-6 text-white" />
               </div>
             </a>
             
             <div className="flex flex-col items-center group">
-              <div className="w-14 h-14 bg-[#333333] rounded-full flex items-center justify-center mb-1 group-hover:bg-[#444] transition-colors shadow-md">
-                <Home className="w-6 h-6 text-white" />
+              <div 
+                className={`w-14 h-14 rounded-full flex items-center justify-center mb-1 transition-all shadow-md overflow-hidden hover:brightness-110 ${profile.logo ? 'p-0.5' : ''}`}
+                style={{ background: profile.logo ? 'white' : (profile.themeColor || '#333333') }}
+              >
+                {profile.logo ? (
+                  <img 
+                    src={toServerFileUrl(profile.logo)} 
+                    alt="Logo" 
+                    className="w-full h-full object-cover rounded-full" 
+                  />
+                ) : (
+                  <Home className="w-6 h-6 text-white" />
+                )}
               </div>
+              <span className="text-xs font-medium text-gray-400 group-hover:text-white transition-colors">Brand</span>
             </div>
             
             {!isDefaultValue(profile.websiteLink, 'Update your web link') ? (
               <a href={profile.websiteLink} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center group">
-                <div className="w-14 h-14 bg-[#333333] rounded-full flex items-center justify-center mb-1 group-hover:bg-[#444] transition-colors shadow-md">
+                <div 
+                  className="w-14 h-14 rounded-full flex items-center justify-center mb-1 transition-all shadow-md hover:brightness-110"
+                  style={{ background: profile.themeColor || '#333333' }}
+                >
                   <Globe className="w-6 h-6 text-white" />
                 </div>
               </a>
             ) : (
                <div className="flex flex-col items-center group opacity-50">
-                <div className="w-14 h-14 bg-[#333333] rounded-full flex items-center justify-center mb-1 shadow-md">
+                <div 
+                  className="w-14 h-14 rounded-full flex items-center justify-center mb-1 shadow-md"
+                  style={{ background: profile.themeColor || '#333333' }}
+                >
                   <Globe className="w-6 h-6 text-white" />
                 </div>
               </div>
@@ -279,13 +411,22 @@ export const PublicProfileView = () => {
         </div>
 
         {/* Footer Buttons */}
-        <div className="sticky bottom-0 left-0 right-0 bg-[#333333] p-6 z-10 rounded-t-[0rem]">
+        <div 
+          className="sticky bottom-0 left-0 right-0 p-6 z-10 rounded-t-[0rem]"
+          style={{ background: profile.themeColor || '#333333' }}
+        >
           <div className="flex justify-around items-center">
-            <button className="flex items-center space-x-2 text-white hover:text-gray-300 transition-colors">
+            <button 
+              onClick={() => setShowGallery(true)}
+              className="flex items-center space-x-2 text-white hover:text-gray-300 transition-colors"
+            >
               <Images className="w-5 h-5" />
               <span className="font-medium text-lg">Gallery</span>
             </button>
-            <button className="flex items-center space-x-2 text-white hover:text-gray-300 transition-colors">
+            <button 
+              className="flex items-center space-x-2 text-white hover:text-gray-300 transition-colors"
+              onClick={handleSaveContact}
+            >
               <Download className="w-5 h-5" />
               <span className="font-medium text-lg">Save</span>
             </button>
@@ -339,6 +480,103 @@ export const PublicProfileView = () => {
                 <p className="text-white/40 text-sm font-light">Scan to view profile</p>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Gallery Modal */}
+      {showGallery && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="w-full max-w-md h-full flex flex-col bg-[#111] relative shadow-2xl overflow-hidden">
+            
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-5 border-b border-white/5 bg-black/40 backdrop-blur-xl sticky top-0 z-20">
+              <h2 className="text-xl font-bold text-white tracking-wide flex items-center gap-3">
+                <span className="bg-purple-500/20 p-2 rounded-lg">
+                  <Images className="w-5 h-5 text-purple-400" />
+                </span>
+                Gallery
+              </h2>
+              <button 
+                onClick={() => setShowGallery(false)}
+                className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-full transition-all"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+              {galleryImages.length > 0 ? (
+                <div className="grid grid-cols-2 gap-3 pb-24 auto-rows-[150px]">
+                  {galleryImages.map((img, index) => (
+                    <div 
+                      key={img.id} 
+                      className={`relative group rounded-xl overflow-hidden shadow-lg border border-white/5 transition-all duration-300 hover:border-purple-500/30 cursor-pointer ${
+                        index % 3 === 0 ? 'col-span-2 row-span-2' : 'col-span-1 row-span-1'
+                      }`}
+                      onClick={() => setLightboxImage(toServerFileUrl(img.image_url))}
+                    >
+                      <img 
+                        src={toServerFileUrl(img.image_url)} 
+                        alt="Gallery Item" 
+                        className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ease-in-out"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+                        <span className="text-white text-xs font-medium tracking-wider opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 delay-75 bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full border border-white/10">
+                          VIEW
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center text-center p-8 space-y-6">
+                  <div className="relative">
+                    <div className="w-24 h-24 bg-purple-500/10 rounded-full flex items-center justify-center animate-pulse">
+                      <Images className="w-12 h-12 text-purple-500/50" />
+                    </div>
+                    <div className="absolute -top-2 -right-2 w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center shadow-lg shadow-purple-500/30">
+                      <span className="text-white font-bold text-lg">0</span>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-2xl font-bold text-white">Empty Gallery</h3>
+                    <p className="text-white/40 max-w-[200px] mx-auto text-sm leading-relaxed">This profile hasn't uploaded any flyers or photos yet.</p>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {/* Bottom Gradient Overlay */}
+            <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#111] to-transparent pointer-events-none z-10" />
+          </div>
+        </div>
+      )}
+
+      {/* Lightbox Modal */}
+      {lightboxImage && (
+        <div 
+          className="fixed inset-0 z-[60] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-300"
+          onClick={() => setLightboxImage(null)}
+        >
+          <button 
+            className="absolute top-4 right-4 p-2 text-white/60 hover:text-white bg-black/20 hover:bg-black/40 rounded-full transition-all z-20"
+            onClick={() => setLightboxImage(null)}
+          >
+            <X className="w-8 h-8" />
+          </button>
+          
+          <div 
+            className="relative max-w-4xl max-h-[90vh] w-full flex items-center justify-center"
+            onClick={e => e.stopPropagation()}
+          >
+            <img 
+              src={lightboxImage} 
+              alt="Full Size" 
+              className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-300"
+            />
           </div>
         </div>
       )}

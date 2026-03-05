@@ -21,11 +21,55 @@ export interface VerifyPayload {
 	pin: string;
 }
 
+export interface GalleryImage {
+    id: string;
+    profile_unique_code: string;
+    image_url: string;
+    created_at: string;
+}
+
+export async function uploadGalleryImage(uniqueCode: string, file: File) {
+    const form = new FormData();
+    form.append('image', file);
+    const res = await fetch(`${BASE_URL}/profiles/${encodeURIComponent(uniqueCode)}/gallery`, {
+        method: 'POST',
+        body: form,
+    });
+    if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        try { const e = await res.json(); msg = e.error || msg; } catch { void 0; }
+        throw new Error(msg);
+    }
+    return res.json();
+}
+
+export async function getGalleryImages(uniqueCode: string) {
+    const res = await fetch(`${BASE_URL}/profiles/${encodeURIComponent(uniqueCode)}/gallery`);
+    if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        try { const e = await res.json(); msg = e.error || msg; } catch { void 0; }
+        throw new Error(msg);
+    }
+    return res.json() as Promise<GalleryImage[]>;
+}
+
+export async function deleteGalleryImage(uniqueCode: string, imageId: string) {
+    const res = await fetch(`${BASE_URL}/profiles/${encodeURIComponent(uniqueCode)}/gallery/${imageId}`, {
+        method: 'DELETE',
+    });
+    if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        try { const e = await res.json(); msg = e.error || msg; } catch { void 0; }
+        throw new Error(msg);
+    }
+    return res.json();
+}
+
 export async function getPublicProfile(uniqueCode: string) {
 	const res = await fetch(`${BASE_URL}/profiles/${encodeURIComponent(uniqueCode)}`);
 	if (!res.ok) {
 		let msg = `HTTP ${res.status}`;
-		try { const e = await res.json(); msg = e.error || msg; } catch {}
+		try { const e = await res.json(); msg = e.error || msg; } catch { void 0; }
 		throw new Error(msg);
 	}
 	return res.json();
@@ -39,7 +83,7 @@ export async function verifyCredentials(uniqueCode: string, payload: VerifyPaylo
 	});
 	if (!res.ok) {
 		let msg = `HTTP ${res.status}`;
-		try { const e = await res.json(); msg = e.error || msg; } catch {}
+		try { const e = await res.json(); msg = e.error || msg; } catch { void 0; }
 		throw new Error(msg);
 	}
 	return res.json();
@@ -53,13 +97,28 @@ export async function verifyById(payload: VerifyPayload) {
     });
     if (!res.ok) {
         let msg = `HTTP ${res.status}`;
-        try { const e = await res.json(); msg = e.error || msg; } catch {}
+        try { const e = await res.json(); msg = e.error || msg; } catch { void 0; }
         throw new Error(msg);
     }
     return res.json();
 }
 
-export async function updateProfile(uniqueCode: string, payload: Record<string, any>) {
+export async function uploadLogo(uniqueCode: string, file: File) {
+    const form = new FormData();
+    form.append('logo', file);
+    const res = await fetch(`${BASE_URL}/profiles/${encodeURIComponent(uniqueCode)}/upload-logo`, {
+        method: 'POST',
+        body: form,
+    });
+    if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        try { const e = await res.json(); msg = e.error || msg; } catch { void 0; }
+        throw new Error(msg);
+    }
+    return res.json();
+}
+
+export async function updateProfile(uniqueCode: string, payload: Record<string, unknown>) {
     const res = await fetch(`${BASE_URL}/profiles/${encodeURIComponent(uniqueCode)}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -67,7 +126,7 @@ export async function updateProfile(uniqueCode: string, payload: Record<string, 
     });
     if (!res.ok) {
         let msg = `HTTP ${res.status}`;
-        try { const e = await res.json(); msg = e.error || msg; } catch {}
+        try { const e = await res.json(); msg = e.error || msg; } catch { void 0; }
         throw new Error(msg);
     }
     return res.json();
@@ -82,7 +141,7 @@ export async function uploadProfilePhoto(uniqueCode: string, file: File) {
     });
     if (!res.ok) {
         let msg = `HTTP ${res.status}`;
-        try { const e = await res.json(); msg = e.error || msg; } catch {}
+        try { const e = await res.json(); msg = e.error || msg; } catch { void 0; }
         throw new Error(msg);
     }
     return res.json();

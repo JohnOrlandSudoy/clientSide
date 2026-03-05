@@ -33,8 +33,8 @@ export const AuthView = () => {
         return;
       }
       navigate(`/edit/${encodeURIComponent(res.uniqueCode)}`);
-    } catch (e: any) {
-      setError(e?.message || 'Invalid ID Number or PIN. Please try again.');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Invalid ID Number or PIN. Please try again.');
     } finally {
       setSubmitting(false);
     }

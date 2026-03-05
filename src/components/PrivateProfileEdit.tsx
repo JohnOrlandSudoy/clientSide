@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Profile } from '../types/profile';
-import { ChangePinForm } from './ChangePinForm';
 import { ProfileUpdateForm } from './ProfileUpdateForm';
 import { Modal } from './Modal';
 import { Lock, ArrowLeft } from 'lucide-react';
@@ -56,8 +55,8 @@ export const PrivateProfileEdit = () => {
       setAuthError('');
       setIsAuthenticated(true);
       setShowAuth(false);
-    } catch (e: any) {
-      setAuthError(e?.message || 'Invalid ID Number or PIN. Please try again.');
+    } catch (e: unknown) {
+      setAuthError(e instanceof Error ? e.message : 'Invalid ID Number or PIN. Please try again.');
     }
   };
 
@@ -157,30 +156,13 @@ export const PrivateProfileEdit = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1a4d6d] via-[#2563a5] to-[#1e5a7d] pt-24 pb-20 px-4">
-      <div className="container mx-auto max-w-5xl">
-        {/* Header with back button */}
-        <div className="mb-6">
-          <button
-            onClick={handleBackToProfile}
-            className="inline-flex items-center space-x-2 text-white hover:text-orange-300 transition-colors mb-4"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span>Back to Profile</span>
-          </button>
-          <h1 className="text-3xl font-bold text-white">Edit Profile</h1>
-          <p className="text-white/80">Update your profile information</p>
-        </div>
-
-        <ChangePinForm profile={profile} onSuccess={handleSuccess} />
-        <ProfileUpdateForm profile={profile} onSuccess={handleSuccess} />
-
-        <Modal
-          isOpen={modalOpen}
-          onClose={() => setModalOpen(false)}
-          message={modalMessage}
-        />
-      </div>
-    </div>
+    <>
+      <ProfileUpdateForm profile={profile} onSuccess={handleSuccess} onExit={handleBackToProfile} />
+      <Modal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        message={modalMessage}
+      />
+    </>
   );
 };

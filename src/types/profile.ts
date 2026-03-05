@@ -19,6 +19,10 @@ export interface Profile {
   viberNumber?: string;          // "Update your Viber Number"
   websiteLink: string;           // "Update your web link"
   aboutText?: string;            // "About text"
+  themeColor?: string;           // "Hex color code"
+  logo?: string;                 // "Logo URL"
+  flyer?: string;                // "Flyer URL"
+  is_pro?: boolean;              // Pro status for features like Flyers
   createdAt?: string;
   updatedAt?: string;
 }
