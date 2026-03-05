@@ -307,7 +307,7 @@ export const PublicProfileView = () => {
                   <Home className="w-6 h-6 text-white" />
                 )}
               </div>
-              <span className="text-xs font-medium text-gray-400 group-hover:text-white transition-colors">Brand</span>
+            
             </div>
             
             {!isDefaultValue(profile.websiteLink, 'Update your web link') ? (
