@@ -477,11 +477,17 @@ export const PublicProfileView = () => {
             {/* Modal Body */}
             <div className="p-10 flex flex-col items-center justify-center space-y-8 min-h-[400px]">
               <div className="relative p-2 bg-white rounded-xl shadow-sm">
-                <img 
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(window.location.href)}&color=000000&bgcolor=ffffff`}
-                  alt="Profile QR Code" 
-                  className="w-64 h-64 object-contain"
-                />
+                <div className="relative">
+                  <img 
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&ecc=H&margin=0&data=${encodeURIComponent(window.location.href)}&color=000000&bgcolor=ffffff`}
+                    alt="Profile QR Code" 
+                    className="w-64 h-64 object-contain"
+                  />
+                  {/* Center Logo Overlay */}
+                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-14 h-14 bg-black rounded-full p-1 shadow-md flex items-center justify-center border border-gray-100">
+                    <img src="/tapbos.png" alt="Logo" className="w-full h-full object-contain" />
+                  </div>
+                </div>
                 {/* Corner Accents to match screenshot style */}
                 <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-black rounded-tl-lg -mt-1 -ml-1"></div>
                 <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-black rounded-tr-lg -mt-1 -mr-1"></div>
