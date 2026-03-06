@@ -19,8 +19,8 @@ export const ChangePinForm = ({ profile, onSuccess }: ChangePinFormProps) => {
       return;
     }
 
-    if (newPin.length !== 5 || !/^\d+$/.test(newPin)) {
-      setError('PIN must be exactly 5 digits');
+    if (newPin.length !== 6 || !/^\d+$/.test(newPin)) {
+      setError('PIN must be exactly 6 digits');
       return;
     }
 
@@ -62,8 +62,8 @@ export const ChangePinForm = ({ profile, onSuccess }: ChangePinFormProps) => {
             type="password"
             value={newPin}
             onChange={(e) => setNewPin(e.target.value)}
-            placeholder="Enter 5 digits"
-            maxLength={5}
+            placeholder="Enter 6 digits"
+            maxLength={6}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2563a5] focus:border-transparent transition-all hover:border-gray-400"
           />
         </div>
@@ -77,7 +77,7 @@ export const ChangePinForm = ({ profile, onSuccess }: ChangePinFormProps) => {
             value={confirmPin}
             onChange={(e) => setConfirmPin(e.target.value)}
             placeholder="Re-enter PIN"
-            maxLength={5}
+            maxLength={6}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2563a5] focus:border-transparent transition-all hover:border-gray-400"
           />
         </div>

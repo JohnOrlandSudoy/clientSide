@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Profile } from '../types/profile';
 import { ProfileUpdateForm } from './ProfileUpdateForm';
 import { Modal } from './Modal';
-import { Lock, ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { getPublicProfile as apiGetPublicProfile, verifyById } from '../api/api';
 
 export const PrivateProfileEdit = () => {
@@ -52,13 +52,14 @@ export const PrivateProfileEdit = () => {
       return;
     }
 
-    if (pin.length !== 5 || !/^\d+$/.test(pin)) {
-      setAuthError('PIN must be exactly 5 digits');
+    if (pin.length !== 6 || !/^\d+$/.test(pin)) {
+      setAuthError('PIN must be exactly 6 digits');
       return;
     }
 
     try {
-      await verifyById({ id: idNumber, pin });
+      const numericId = idNumber.replace(/\D/g, '');
+      await verifyById({ id: numericId, pin });
       setAuthError('');
       setIsAuthenticated(true);
       setShowAuth(false);
@@ -96,53 +97,70 @@ export const PrivateProfileEdit = () => {
 
   if (showAuth) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#1a4d6d] via-[#2563a5] to-[#1e5a7d] flex items-center justify-center p-4 pt-24 pb-20">
-        <div className="bg-white rounded-2xl shadow-2xl p-10 w-full max-w-md border border-gray-100">
-          <div className="text-center mb-8">
-            <div className="bg-gradient-to-r from-[#1a4d6d] to-[#2563a5] p-3 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-              <Lock className="w-8 h-8 text-white" />
-            </div>
-            <h2 className="text-3xl font-bold text-[#1a4d6d] mb-2">Edit Profile</h2>
-            <p className="text-gray-600 text-sm">Enter your credentials to edit your profile</p>
-          </div>
+      <div className="bg-black min-h-screen relative overflow-hidden flex items-center justify-center px-4 py-8  " >
+        {/* Header Background to match new PIN form */}
+        <div className="absolute top-0 right-0 w-full h-[20] z-0 pointer-events-none">
+        <img
+          src="/formlogo.png"
+          alt="Background"
+          className="w-full h-full object-cover opacity-60 object-top"
+        />
+      </div>
+
+        <div className="relative z-10 w-full max-w-[420px]">
+        <div className="text-center mb-8">
+          <img
+            src="/tapbos.png"
+            alt="tapboss"
+            className="w-28 h-28 mx-auto object-contain"
+          />
+          <h2 className="mt-2 text-white tracking-wider text-2xl sm:text-3xl font-extrabold">
+            TAP INTO THE FUTURE
+          </h2>
+        </div>
 
           {authError && (
-            <div className="bg-red-50 border-l-4 border-red-500 text-red-700 px-4 py-3 rounded-r-lg mb-6 shadow-sm">
+            <div className="bg-red-500/10 border border-red-500/40 text-red-200 px-4 py-3 rounded-xl mb-6 text-sm">
               {authError}
             </div>
           )}
 
-          <div className="space-y-5">
+          <div className="  w-full bg-black rounded-t-[3rem] px-6 pt-4
+         pb-0 h-0 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] border-t border-gray-900">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-white text-center font-bold text-base mb-1">
                 ID Number
               </label>
-              <input
-                type="text"
-                value={idNumber}
-                onChange={(e) => setIdNumber(e.target.value)}
-                placeholder="20251001-0000-0001"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2563a5] focus:border-transparent transition-all hover:border-gray-400"
-              />
+              <div className="relative w-full rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 p-[2px] border border-white">
+                <input
+                  type="text"
+                  value={idNumber}
+                  onChange={(e) => setIdNumber(e.target.value)}
+                  placeholder="Enter 16 Digits ID No."
+                  className="w-full bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500 text-white rounded-full py-3 px-6 text-center placeholder-white/70 focus:outline-none italic"
+                />
+              </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-white text-center font-bold text-base mb-1">
                 PIN
               </label>
-              <input
-                type="password"
-                value={pin}
-                onChange={(e) => setPin(e.target.value)}
-                placeholder="12345"
-                maxLength={5}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2563a5] focus:border-transparent transition-all hover:border-gray-400"
-              />
+              <div className="relative w-full rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 p-[2px] border border-white">
+                <input
+                  type="password"
+                  value={pin}
+                  onChange={(e) => setPin(e.target.value)}
+                  placeholder="Enter 6 Digits PIN"
+                  maxLength={6}
+                  className="w-full bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500 text-white rounded-full py-3 px-6 text-center placeholder-white/70 focus:outline-none italic"
+                />
+              </div>
             </div>
 
             <button
               onClick={handleAuthenticate}
-              className="w-full bg-gradient-to-r from-[#1a4d6d] to-[#2563a5] text-white py-3.5 rounded-lg hover:from-[#2563a5] hover:to-[#1a4d6d] transition-all font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 hover:scale-[1.02]"
+              className="mt-6 w-full rounded-full bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500 text-white py-3 font-semibold shadow-[0_8px_20px_rgba(0,0,0,0.35)] hover:brightness-110 active:scale-[0.99] transition-all disabled:opacity-60"
             >
               Verify & Edit Profile
             </button>
@@ -151,7 +169,7 @@ export const PrivateProfileEdit = () => {
           <div className="mt-6 text-center">
             <button
               onClick={handleBackToProfile}
-              className="inline-flex items-center space-x-2 text-[#1a4d6d] hover:text-[#2563a5] transition-colors"
+              className="inline-flex items-center space-x-2 text-white hover:text-white/80 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Back to Profile</span>

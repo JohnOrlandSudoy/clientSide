@@ -141,8 +141,8 @@ export const ProfileUpdateForm = ({ profile, onSuccess, onExit }: ProfileUpdateF
     const handleNext = () => {
     if (currentStep === 1) {
       if (newPin || confirmPin) {
-         if (newPin.length !== 5 || !/^\d+$/.test(newPin)) {
-           alert('PIN must be exactly 5 digits');
+         if (newPin.length !== 6 || !/^\d+$/.test(newPin)) {
+           alert('PIN must be exactly 6 digits');
            return;
          }
          if (newPin !== confirmPin) {
@@ -187,8 +187,8 @@ export const ProfileUpdateForm = ({ profile, onSuccess, onExit }: ProfileUpdateF
 
       // Handle PIN update
       if (newPin) {
-        if (newPin.length !== 5 || !/^\d+$/.test(newPin)) {
-          alert('PIN must be exactly 5 digits');
+        if (newPin.length !== 6 || !/^\d+$/.test(newPin)) {
+          alert('PIN must be exactly 6 digits');
           return;
         }
         if (newPin !== confirmPin) {
@@ -212,15 +212,13 @@ export const ProfileUpdateForm = ({ profile, onSuccess, onExit }: ProfileUpdateF
   const renderStep1 = () => (
     <div className="bg-black min-h-screen flex flex-col relative overflow-hidden h-[100vh]">
         {/* Top Background Image */}
-        <div className="absolute top-0 left-0 w-full h-[20] z-0">
-            <img 
-                src="/formlogo.png" 
-                alt="Background" 
-                className="w-full h-full object-cover object-bottom"
-            />
-            {/* Gradient Overlay to blend with black bottom */}
-            <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-black to-transparent"></div>
-        </div>
+        <div className="absolute top-0 right-0 w-full h-[20] z-0 pointer-events-none">
+        <img
+          src="/formlogo.png"
+          alt="Background"
+          className="w-full h-full object-cover opacity-60 object-top"
+        />
+      </div>
 
         <div className="relative z-10 w-full h-full flex flex-col justify-end">
             {/* Logo Section - Positioned above the card */}
@@ -242,8 +240,8 @@ export const ProfileUpdateForm = ({ profile, onSuccess, onExit }: ProfileUpdateF
                                     type="password"
                                     value={newPin}
                                     onChange={(e) => setNewPin(e.target.value)}
-                                    placeholder="Enter 5 Digits"
-                                    maxLength={5}
+                                placeholder="Enter 6 Digits"
+                                maxLength={6}
                                     className="w-full bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500 text-white rounded-full py-3 px-6 text-center placeholder-white/70 focus:outline-none italic"
                                 />
                             </div>
@@ -260,7 +258,7 @@ export const ProfileUpdateForm = ({ profile, onSuccess, onExit }: ProfileUpdateF
                                 value={confirmPin}
                                 onChange={(e) => setConfirmPin(e.target.value)}
                                 placeholder="Re-enter PIN"
-                                maxLength={5}
+                                maxLength={6}
                                 className="w-full bg-gradient-to-r from-blue-600 via-purple-500 to-pink-500 text-white rounded-full py-3 px-6 text-center placeholder-white/70 focus:outline-none italic"
                             />
                         </div>
@@ -708,33 +706,35 @@ export const ProfileUpdateForm = ({ profile, onSuccess, onExit }: ProfileUpdateF
                                     <Crown className="w-8 h-8 text-yellow-500/80 animate-pulse" />
                                 </div>
                                 <h4 className="font-bold text-gray-200 text-sm tracking-wide">Unlock Pro Features</h4>
-                                <p className="text-xs text-gray-400 mt-1">Upgrade to Pro to enable flyer uploads and more.</p>
+                                <p className="text-xs text-gray-400 mt-1">Upgrade to Pro to enable flyer uploads and theme color.</p>
                             </div>
                         )}
 
-                        {/* Color Picker */}
-                        <div className="text-center pt-2 border-t border-white/10">
-                            <p className="text-xs text-gray-400 font-medium mb-4 uppercase tracking-widest">Theme Color Template</p>
-                            <div className="grid grid-cols-4 gap-4 max-w-[240px] mx-auto">
-                                 {[
-                                     'linear-gradient(135deg, #0f172a 0%, #334155 100%)',   // Navy Gradient
-                                     'linear-gradient(135deg, #831843 0%, #db2777 100%)',   // Magenta Gradient
-                                     'linear-gradient(135deg, #581c87 0%, #a855f7 100%)',   // Purple Gradient
-                                     'linear-gradient(135deg, #14532d 0%, #22c55e 100%)',   // Green Gradient
-                                     'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)',   // Blue Gradient
-                                     'linear-gradient(135deg, #0e7490 0%, #22d3ee 100%)',   // Cyan Gradient
-                                     'linear-gradient(135deg, #7f1d1d 0%, #ef4444 100%)',   // Red Gradient
-                                     'linear-gradient(135deg, #7c2d12 0%, #fb923c 100%)'    // Orange Gradient
-                                 ].map((gradient) => (
-                                     <button
-                                         key={gradient}
+                        {/* Color Picker (Pro Only) */}
+                        {formData.is_pro && (
+                          <div className="text-center pt-2 border-t border-white/10">
+                              <p className="text-xs text-gray-400 font-medium mb-4 uppercase tracking-widest">Theme Color Template</p>
+                              <div className="grid grid-cols-4 gap-4 max-w-[240px] mx-auto">
+                                  {[
+                                      'linear-gradient(135deg, #0f172a 0%, #334155 100%)',
+                                      'linear-gradient(135deg, #831843 0%, #db2777 100%)',
+                                      'linear-gradient(135deg, #581c87 0%, #a855f7 100%)',
+                                      'linear-gradient(135deg, #14532d 0%, #22c55e 100%)',
+                                      'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)',
+                                      'linear-gradient(135deg, #0e7490 0%, #22d3ee 100%)',
+                                      'linear-gradient(135deg, #7f1d1d 0%, #ef4444 100%)',
+                                      'linear-gradient(135deg, #7c2d12 0%, #fb923c 100%)'
+                                  ].map((gradient) => (
+                                      <button
+                                          key={gradient}
                                           onClick={() => handleChange('themeColor', gradient)}
-                                         className={`w-10 h-10 rounded-xl shadow-lg hover:scale-110 transition-all duration-300 ${formData.themeColor === gradient ? 'ring-2 ring-white ring-offset-2 ring-offset-gray-900 scale-110' : 'hover:shadow-white/20'}`}
-                                     style={{ background: gradient }}
-                                 />
-                             ))}
-                        </div>
-                    </div>
+                                          className={`w-10 h-10 rounded-xl shadow-lg hover:scale-110 transition-all duration-300 ${formData.themeColor === gradient ? 'ring-2 ring-white ring-offset-2 ring-offset-gray-900 scale-110' : 'hover:shadow-white/20'}`}
+                                          style={{ background: gradient }}
+                                      />
+                                  ))}
+                              </div>
+                          </div>
+                        )}
                     </div>
                 </div>
             </div>

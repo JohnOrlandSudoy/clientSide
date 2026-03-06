@@ -91,7 +91,6 @@ export const PublicProfileView = () => {
   const handleSaveContact = async () => {
     if (!profile) return;
 
-    // Helper to get image as base64
     const getBase64Image = async (url: string) => {
         try {
             const response = await fetch(url);
@@ -107,45 +106,83 @@ export const PublicProfileView = () => {
         }
     };
 
-    let photoString = '';
+    const escapeVCardText = (value: string) =>
+      value
+        .replace(/\\/g, '\\\\')
+        .replace(/\r\n|\n|\r/g, '\\n')
+        .replace(/;/g, '\\;')
+        .replace(/,/g, '\\,');
+
+    const foldLine = (line: string) => {
+      const maxLen = 75;
+      const out: string[] = [];
+      for (let i = 0; i < line.length; i += maxLen) {
+        const chunk = line.slice(i, i + maxLen);
+        out.push(i === 0 ? chunk : ` ${chunk}`);
+      }
+      return out;
+    };
+
+    const eol = '\r\n';
+
+    let photoLine: string | null = null;
     if (profile.profilePhoto) {
         const photoUrl = toServerFileUrl(profile.profilePhoto);
         const base64 = await getBase64Image(photoUrl);
         if (base64) {
-            // Remove data:image/jpeg;base64, prefix
             const b64Data = base64.split(',')[1];
-            photoString = `PHOTO;ENCODING=b;TYPE=JPEG:${b64Data}\n`;
+            if (b64Data) {
+              photoLine = `PHOTO;ENCODING=b;TYPE=JPEG:${b64Data}`;
+            }
         }
     }
 
-    // Construct VCard 3.0 content
-    const vCardData = [
+    const nameParts = profile.fullName
+      .split(' ')
+      .map(s => s.trim())
+      .filter(Boolean);
+
+    const givenName = nameParts[0] || '';
+    const familyName = nameParts.length >= 2 ? nameParts[nameParts.length - 1] : '';
+    const additionalNames = nameParts.length > 2 ? nameParts.slice(1, -1).join(' ') : '';
+    const nValue = [
+      escapeVCardText(familyName),
+      escapeVCardText(givenName),
+      escapeVCardText(additionalNames),
+      '',
+      ''
+    ].join(';');
+
+    const vCardLines = [
         'BEGIN:VCARD',
         'VERSION:3.0',
-        `FN:${profile.fullName}`,
-        `N:${profile.fullName.split(' ').reverse().join(';')};;;`,
-        profile.companyName ? `ORG:${profile.companyName}` : '',
-        profile.jobTitle ? `TITLE:${profile.jobTitle}` : '',
+        `FN:${escapeVCardText(profile.fullName)}`,
+        `N:${nValue}`,
+        profile.companyName ? `ORG:${escapeVCardText(profile.companyName)}` : '',
+        profile.jobTitle ? `TITLE:${escapeVCardText(profile.jobTitle)}` : '',
         profile.mobilePrimary ? `TEL;TYPE=CELL:${profile.mobilePrimary}` : '',
         profile.landlineNumber ? `TEL;TYPE=WORK:${profile.landlineNumber}` : '',
-        profile.whatsappNumber && !profile.whatsappNumber.includes('Update') ? `TEL;TYPE=WHATSAPP:${profile.whatsappNumber}` : '',
-        profile.viberNumber && !profile.viberNumber.includes('Update') ? `TEL;TYPE=VIBER:${profile.viberNumber}` : '',
+        profile.whatsappNumber && !profile.whatsappNumber.includes('Update') ? `TEL;TYPE=CELL:${profile.whatsappNumber}` : '',
+        profile.viberNumber && !profile.viberNumber.includes('Update') ? `TEL;TYPE=CELL:${profile.viberNumber}` : '',
         profile.email ? `EMAIL;TYPE=WORK:${profile.email}` : '',
         profile.websiteLink && !profile.websiteLink.includes('Update') ? `URL:${profile.websiteLink}` : '',
         profile.facebookLink && !profile.facebookLink.includes('Update') ? `X-SOCIALPROFILE;TYPE=facebook:${profile.facebookLink}` : '',
         profile.instagramLink && !profile.instagramLink.includes('Update') ? `X-SOCIALPROFILE;TYPE=instagram:${profile.instagramLink}` : '',
         profile.tiktokLink && !profile.tiktokLink.includes('Update') ? `X-SOCIALPROFILE;TYPE=tiktok:${profile.tiktokLink}` : '',
-        profile.address ? `ADR;TYPE=WORK:;;${profile.address.replace(/,/g, ';')};;;;` : '',
-        profile.aboutText ? `NOTE:${profile.aboutText}` : '',
-        photoString, // Add photo if available
-        `URL;TYPE=PROFILE:${window.location.href}`,
+        profile.address ? `ADR;TYPE=WORK:;;${escapeVCardText(profile.address)};;;;` : '',
+        profile.aboutText ? `NOTE:${escapeVCardText(profile.aboutText)}` : '',
+        photoLine ?? '',
+        `URL:${window.location.href}`,
         'END:VCARD'
-    ].filter(Boolean).join('\n');
+    ].filter(Boolean);
 
-    // Create file for sharing/downloading
-    const file = new File([vCardData], `${profile.fullName.replace(/\s+/g, '_')}.vcf`, { type: 'text/vcard' });
+    const vCardData = vCardLines.flatMap(foldLine).join(eol) + eol;
 
-    // Try Web Share API first (Mobile Native Experience)
+    const safeName = profile.fullName.replace(/\s+/g, '_').replace(/[^\w-]/g, '');
+    const fileName = `${safeName || 'contact'}.vcf`;
+    const blob = new Blob([vCardData], { type: 'text/vcard;charset=utf-8' });
+    const file = new File([blob], fileName, { type: 'text/vcard;charset=utf-8' });
+
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       try {
         await navigator.share({
@@ -158,15 +195,89 @@ export const PublicProfileView = () => {
         if ((err as Error).name !== 'AbortError') {
           console.error('Share failed:', err);
         }
-        // If share fails (or user cancels), fall back to download
       }
     }
 
-    // Fallback: Direct Download (Desktop / Non-supported Mobile)
-    const url = window.URL.createObjectURL(file);
+    const url = window.URL.createObjectURL(blob);
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    if (isIOS) {
+      window.location.assign(url);
+      window.setTimeout(() => window.URL.revokeObjectURL(url), 60_000);
+      return;
+    }
+
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `${profile.fullName.replace(/\s+/g, '_')}.vcf`);
+    link.setAttribute('download', fileName);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  };
+
+  const handleDownloadQr = async () => {
+    const qrData = window.location.href;
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=800x800&format=png&ecc=H&margin=0&data=${encodeURIComponent(qrData)}&color=000000&bgcolor=ffffff`;
+
+    const [qrRes, logoRes] = await Promise.all([fetch(qrUrl), fetch('/tapbos.png')]);
+    if (!qrRes.ok) throw new Error('Failed to generate QR');
+    if (!logoRes.ok) throw new Error('Failed to load logo');
+    const [qrBlob, logoBlob] = await Promise.all([qrRes.blob(), logoRes.blob()]);
+
+    const loadImage = async (blob: Blob) => {
+      const u = URL.createObjectURL(blob);
+      try {
+        const img = new Image();
+        img.decoding = 'async';
+        img.src = u;
+        await img.decode();
+        return img;
+      } finally {
+        URL.revokeObjectURL(u);
+      }
+    };
+
+    const [qrImg, logoImg] = await Promise.all([loadImage(qrBlob), loadImage(logoBlob)]);
+    const size = qrImg.naturalWidth || 800;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Canvas not available');
+
+    ctx.drawImage(qrImg, 0, 0, size, size);
+
+    const logoSize = Math.round(size * 0.18);
+    const padding = Math.round(logoSize * 0.2);
+    const badgeSize = logoSize + padding * 2;
+    const cx = size / 2;
+    const cy = size / 2;
+
+    // Dark badge to ensure white/bright logo remains visible in the exported PNG
+    ctx.fillStyle = '#000000';
+    ctx.beginPath();
+    ctx.arc(cx, cy, badgeSize / 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.drawImage(logoImg, cx - logoSize / 2, cy - logoSize / 2, logoSize, logoSize);
+
+    const outBlob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('Failed to export QR'))), 'image/png');
+    });
+
+    const safeName = profile.fullName.replace(/\s+/g, '_').replace(/[^\w-]/g, '');
+    const fileName = `${safeName || 'profile'}-qr.png`;
+    const url = window.URL.createObjectURL(outBlob);
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    if (isIOS) {
+      window.location.assign(url);
+      window.setTimeout(() => window.URL.revokeObjectURL(url), 60_000);
+      return;
+    }
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', fileName);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -502,7 +613,19 @@ export const PublicProfileView = () => {
 
             {/* Modal Footer */}
             <div className="bg-[#000000] p-6">
-              <div className="flex justify-center">
+              <div className="flex flex-col items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    void handleDownloadQr().catch((e) => {
+                      console.error(e);
+                    });
+                  }}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/15 text-white hover:bg-white/25 transition-colors ring-1 ring-white/20"
+                >
+                  <Download className="w-4 h-4" />
+                  Download QR
+                </button>
                 <p className="text-white/40 text-sm font-light">Scan to view profile</p>
               </div>
             </div>
