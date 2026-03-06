@@ -8,6 +8,14 @@ import {
 } from 'lucide-react';
 import { getPublicProfile as apiGetPublicProfile, toServerFileUrl, getGalleryImages, GalleryImage } from '../api/api';
 
+const getAbsoluteUrl = (url: string | undefined) => {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  return `https://${url}`;
+};
+
 export const PublicProfileView = () => {
   const { uniqueCode } = useParams<{ uniqueCode: string }>();
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -165,10 +173,10 @@ export const PublicProfileView = () => {
         profile.whatsappNumber && !profile.whatsappNumber.includes('Update') ? `TEL;TYPE=CELL:${profile.whatsappNumber}` : '',
         profile.viberNumber && !profile.viberNumber.includes('Update') ? `TEL;TYPE=CELL:${profile.viberNumber}` : '',
         profile.email ? `EMAIL;TYPE=WORK:${profile.email}` : '',
-        profile.websiteLink && !profile.websiteLink.includes('Update') ? `URL:${profile.websiteLink}` : '',
-        profile.facebookLink && !profile.facebookLink.includes('Update') ? `X-SOCIALPROFILE;TYPE=facebook:${profile.facebookLink}` : '',
-        profile.instagramLink && !profile.instagramLink.includes('Update') ? `X-SOCIALPROFILE;TYPE=instagram:${profile.instagramLink}` : '',
-        profile.tiktokLink && !profile.tiktokLink.includes('Update') ? `X-SOCIALPROFILE;TYPE=tiktok:${profile.tiktokLink}` : '',
+        profile.websiteLink && !profile.websiteLink.includes('Update') ? `URL:${getAbsoluteUrl(profile.websiteLink)}` : '',
+        profile.facebookLink && !profile.facebookLink.includes('Update') ? `X-SOCIALPROFILE;TYPE=facebook:${getAbsoluteUrl(profile.facebookLink)}` : '',
+        profile.instagramLink && !profile.instagramLink.includes('Update') ? `X-SOCIALPROFILE;TYPE=instagram:${getAbsoluteUrl(profile.instagramLink)}` : '',
+        profile.tiktokLink && !profile.tiktokLink.includes('Update') ? `X-SOCIALPROFILE;TYPE=tiktok:${getAbsoluteUrl(profile.tiktokLink)}` : '',
         profile.address ? `ADR;TYPE=WORK:;;${escapeVCardText(profile.address)};;;;` : '',
         profile.aboutText ? `NOTE:${escapeVCardText(profile.aboutText)}` : '',
         photoLine ?? '',
@@ -422,7 +430,7 @@ export const PublicProfileView = () => {
             </div>
             
             {!isDefaultValue(profile.websiteLink, 'Update your web link') ? (
-              <a href={profile.websiteLink} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center group">
+              <a href={getAbsoluteUrl(profile.websiteLink)} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center group">
                 <div 
                   className="w-14 h-14 rounded-full flex items-center justify-center mb-1 transition-all shadow-md hover:brightness-110"
                   style={{ background: profile.themeColor || '#333333' }}
@@ -449,7 +457,7 @@ export const PublicProfileView = () => {
               {/* Facebook */}
               {!isDefaultValue(profile.facebookLink, 'Update your Facebook Link') && (
                 <a 
-                  href={profile.facebookLink}
+                  href={getAbsoluteUrl(profile.facebookLink)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-between bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow"
@@ -467,7 +475,7 @@ export const PublicProfileView = () => {
               {/* Tiktok */}
               {!isDefaultValue(profile.tiktokLink, 'Update your TikTok Link') && (
                 <a 
-                  href={profile.tiktokLink}
+                  href={getAbsoluteUrl(profile.tiktokLink)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-between bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow"
@@ -485,7 +493,7 @@ export const PublicProfileView = () => {
               {/* Instagram */}
               {!isDefaultValue(profile.instagramLink, 'Update your Instagram Link') && (
                 <a 
-                  href={profile.instagramLink}
+                  href={getAbsoluteUrl(profile.instagramLink)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-between bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow"
