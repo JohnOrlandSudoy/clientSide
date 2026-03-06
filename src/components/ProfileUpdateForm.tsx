@@ -760,8 +760,8 @@ export const ProfileUpdateForm = ({ profile, onSuccess, onExit }: ProfileUpdateF
   return (
     <>
       {currentStep === 1 && renderStep1()}
-      {currentStep === 2 && renderStep2()}
-      {currentStep === 3 && renderStep3()}
+      {currentStep === 2 && renderStep3()}
+      {currentStep === 3 && renderStep2()}
       {currentStep === 4 && renderStep4()}
       
       {showSuccessModal && (
